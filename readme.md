@@ -1,0 +1,9 @@
+We configured all the basic and neccessary settings as done in production so that it is easy to implement things
+
+### GOAL1
+Setting routes in such a way :
+    -> making a method in controller (wrapped in a handler) to run when hit a particular url
+    -> making a route for user registration to call controller on a specific route
+    -> route declaration in app.js so that to a particular path the control goes to the userRouter middleware then from that the control goes to the controller or say methods.
+
+##### ALL SETUP CONFIGURED
