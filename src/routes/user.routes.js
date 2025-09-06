@@ -5,4 +5,4 @@ const router = Router();
 
 router.route("/registration").post(userRegistration);
 
-export {router}
+export { router }
