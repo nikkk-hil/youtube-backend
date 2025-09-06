@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import connectDB from './db/connection.js';
+import { connectDB } from './db/connection.js';
 import app from './app.js';
 // import mongoose from 'mongoose';
 // import {db_name} from './constants.js'
