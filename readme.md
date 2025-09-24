@@ -17,3 +17,8 @@ Setting routes in such a way :
     - Made a middleware to check authenticity of user.
     - Logout Done.
 
+### GOAL4: Refreshing Access Token
+    - Checking whether the user is authorized or not with checking it's refresh token
+    - generate both access and refresh token and send back to the cookie
+    - This results in clear bothering to login repeatedly.
+
