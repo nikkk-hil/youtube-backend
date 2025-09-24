@@ -12,3 +12,8 @@ Setting routes in such a way :
     - Handling files before we head to the userRegistration routes, using a middleware in user.routes of multer upload method
     - do the following things as instructed in user.controller.js to register user successfully
 
+### GOAL3: USER LOGIN & LOGOUT
+    - Regular Login by considering the instruction
+    - Made a middleware to check authenticity of user.
+    - Logout Done.
+
