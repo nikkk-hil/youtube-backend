@@ -235,9 +235,114 @@ const refreshAccessToken = asyncHandler ( async (req, res) => {
     
 })
 
+const changePassword = asyncHandler ( async (req, res) => {
+
+    const {oldPassword, newPassword, confirmPassword} = req.body
+    const user = req.user
+
+    if (!user)
+        throw new ApiError(500, "user not found in the req")
+
+    const isCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isCorrect)
+        throw new ApiError(401, "Password is incorrect")
+
+    if (newPassword !== confirmPassword)
+        throw new ApiError(401, "new and confirm password is not same")
+
+    user.password = newPassword
+    user.save({validateBeforeSave: false})
+
+    return res.
+    status(200)
+    .json(new ApiResponse(201, {}, "Password Changed Successfully!"))
+    
+})
+
+const editUserDetails = asyncHandler ( async (req, res) => {
+    const {fullName, email} = req.body
+
+    if (!fullName && !email)
+        throw new ApiError(401, "All details are required")
+
+    const userId = req.user?._id
+
+    if (!userId)
+        throw new ApiError(400, "User is not in req!")
+
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: { fullName, email }},
+        { new : true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(new ApiResponse(201, updatedUser, "Name and Email Updated!"))
+})
+
+const changeAvatar = asyncHandler ( async (req,res) => {
+
+    const avatarPath = req.file?.path
+
+    if (!avatarPath)
+        throw new ApiError(401, "avatar path not found!!")
+
+    const avatar = await uploadOnCloudinary(avatarPath);
+
+    if (!avatar.url)
+        throw new ApiError(400, "Upload on Cloudinary Failed!!");
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        { $set : {avatar: avatar.url}},
+        {new : true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json( new ApiResponse (201, user, "Avatar Updated!!"))
+
+
+})
+
+const changeCoverImage = asyncHandler ( async (req, res) => {
+    const coverImgPath = req.file?.path
+
+    if (!coverImgPath)
+        throw new ApiError(401, "Conver image path not found!!")
+
+    const coverImage = await uploadOnCloudinary(coverImgPath);
+
+    if (!coverImage.url)
+        throw new ApiError(501, "Upload on Cloudinary Failed!!");
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        { $set : {coverImage: coverImage.url}},
+        {new : true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json( new ApiResponse (201, user, "Cover Image Updated!!"))
+})
+
+const getUser = asyncHandler ( async (req, res) => {
+    return res
+    .status(200)
+    .json(new ApiResponse(201, req.user, "User Fetched Successfully!!"));
+})
+
 export { 
     userRegistration,
     userLogin,
     userLogout,
-    refreshAccessToken
+    refreshAccessToken,
+    changePassword,
+    editUserDetails,
+    changeAvatar,
+    changeCoverImage,
+    getUser,
 };
