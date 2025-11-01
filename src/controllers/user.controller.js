@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.service.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndReference = async (userId) => {
 
@@ -294,7 +295,7 @@ const changeAvatar = asyncHandler ( async (req,res) => {
     if (!avatar.url)
         throw new ApiError(400, "Upload on Cloudinary Failed!!");
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         { $set : {avatar: avatar.url}},
         {new : true}
@@ -318,7 +319,7 @@ const changeCoverImage = asyncHandler ( async (req, res) => {
     if (!coverImage.url)
         throw new ApiError(501, "Upload on Cloudinary Failed!!");
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         { $set : {coverImage: coverImage.url}},
         {new : true}
@@ -335,6 +336,145 @@ const getUser = asyncHandler ( async (req, res) => {
     .json(new ApiResponse(201, req.user, "User Fetched Successfully!!"));
 })
 
+const getUserChannelProfile = asyncHandler ( async (req, res) => {
+
+    const username = req.params
+
+    if (!username?.trim())
+        throw new ApiError(401, "Unauthorized!!")
+
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase()  //filter documents on the basis of username
+            }
+        },
+/*
+        {
+            $lookup: {
+                from: <collection to which you want to perform outer left join>,
+                localField: <field to the currect document you want to perform equalization with foreign field>,
+                foreignField: <field to the "from" collection document to perform equalization with localField>,
+                as: <name of the newly formed field (array of object) in the current collection>
+            }
+        },
+*/
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscriberCount: {
+                    $size: "$subscribers"
+                },
+                channelSubscribedToCount: {
+                    $size: "subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id /* this is the user visiting a particular channel */, "$subscribers.subscriber" /* this is the channel visitor is visiting */]},
+                        /* Here the visitor id is being searched in the channel if it's present -> true else -> false */
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                username: 1,
+                email: 1,
+                avatar: 1,
+                coverImage: 1,
+                subscriberCount: 1,
+                channelSubscribedToCount: 1,
+                isSubscribed: 1
+            }
+        }
+    ])
+
+    if (!channel?.length)
+        throw new ApiError(401, "Channel not found!!")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, channel[0], "User Channel Fetched Successfully!!")
+    )
+
+})
+
+const getWatchHistory = asyncHandler ( async (req, res) => {
+    const id = req.user?._id // this is string not mongoDb object Id
+
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(id)    
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+
+        }
+    ])
+
+    if (!user)
+        throw new ApiError(401, "User History not found!!")
+
+    return res
+    .status(200)
+    .json(new ApiResponse (200, user[0].watchHistory, "Watch History Fetched Successfully!!"))
+
+})
+
 export { 
     userRegistration,
     userLogin,
@@ -345,4 +485,6 @@ export {
     changeAvatar,
     changeCoverImage,
     getUser,
+    getUserChannelProfile,
+    getWatchHistory
 };
