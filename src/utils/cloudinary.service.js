@@ -36,8 +36,12 @@ const uploadOnCloudinary = async (localFilePath) => {
 
 const getPublicId = function(url){
     let publicId = ""
+    var idx = url.length
+    
+    while (url[idx] != '.')
+        idx--
 
-    for (var i = url.length - 5; url[i] != '/'; i--){
+    for (var i = idx-1; url[i] != '/'; i--){
         // console.log(url[i]);
         publicId = url[i] + publicId
     }
