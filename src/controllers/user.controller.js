@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiErrors.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.service.js";
+import { uploadOnCloudinary, destroyFromCloudinary } from "../utils/cloudinary.service.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -239,12 +239,20 @@ const refreshAccessToken = asyncHandler ( async (req, res) => {
 const changePassword = asyncHandler ( async (req, res) => {
 
     const {oldPassword, newPassword, confirmPassword} = req.body
-    const user = req.user
+
+
+    // const user = req.user  it doesn't contain password
+    const user = await User.findById(req.user?._id)
 
     if (!user)
         throw new ApiError(500, "user not found in the req")
 
+    // console.log(user)
+    
     const isCorrect = await user.isPasswordCorrect(oldPassword)
+         
+    console.log(isCorrect);
+    
 
     if (!isCorrect)
         throw new ApiError(401, "Password is incorrect")
@@ -264,7 +272,7 @@ const changePassword = asyncHandler ( async (req, res) => {
 const editUserDetails = asyncHandler ( async (req, res) => {
     const {fullName, email} = req.body
 
-    if (!fullName && !email)
+    if (!fullName || !email)
         throw new ApiError(401, "All details are required")
 
     const userId = req.user?._id
@@ -292,14 +300,28 @@ const changeAvatar = asyncHandler ( async (req,res) => {
 
     const avatar = await uploadOnCloudinary(avatarPath);
 
+    console.log(avatar);
+
     if (!avatar.url)
         throw new ApiError(400, "Upload on Cloudinary Failed!!");
 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        { $set : {avatar: avatar.url}},
-        {new : true}
-    ).select("-password")
+    const user = await User.findById(req.user?._id).select("-password")
+    const oldAvatarUrl = user.avatar;
+
+    user.avatar = avatar.url;
+    user.save({validateBeforeSave: false});
+    
+    const response = await destroyFromCloudinary(oldAvatarUrl);
+    console.log("RESPONSE", response);
+    
+
+    // const user = await User.findByIdAndUpdate(
+    //     req.user?._id,
+    //     { $set : {avatar: avatar.url}},
+    //     {new : true}
+    // ).select("-password")
+
+
 
     return res
     .status(200)
@@ -319,11 +341,20 @@ const changeCoverImage = asyncHandler ( async (req, res) => {
     if (!coverImage.url)
         throw new ApiError(501, "Upload on Cloudinary Failed!!");
 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        { $set : {coverImage: coverImage.url}},
-        {new : true}
-    ).select("-password")
+    const user = await User.findById(req.user?._id).select("-password")
+
+    const oldCoverImgUrl = user.coverImage
+    user.coverImage = coverImage.url
+    user.save({validateBeforeSave: false})
+
+    const deletionResponse = await destroyFromCloudinary(oldCoverImgUrl);
+    console.log("File Deleted ", deletionResponse);
+    
+    // const user = await User.findByIdAndUpdate(
+    //     req.user?._id,
+    //     { $set : {coverImage: coverImage.url}},
+    //     {new : true}
+    // ).select("-password")
 
     return res
     .status(200)
@@ -338,7 +369,10 @@ const getUser = asyncHandler ( async (req, res) => {
 
 const getUserChannelProfile = asyncHandler ( async (req, res) => {
 
-    const username = req.params
+    const {username} = req.params
+
+    console.log("USERNAME: ", username);
+    
 
     if (!username?.trim())
         throw new ApiError(401, "Unauthorized!!")
@@ -381,7 +415,7 @@ const getUserChannelProfile = asyncHandler ( async (req, res) => {
                     $size: "$subscribers"
                 },
                 channelSubscribedToCount: {
-                    $size: "subscribedTo"
+                    $size: "$subscribedTo"
                 },
                 isSubscribed: {
                     $cond: {
@@ -461,9 +495,6 @@ const getWatchHistory = asyncHandler ( async (req, res) => {
                 ]
             }
         },
-        {
-
-        }
     ])
 
     if (!user)
