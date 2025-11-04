@@ -5,7 +5,66 @@ import { destroyFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.s
 import { Video } from "../models/video.model.js" 
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const getAllVideos = asyncHandler ( async(req, res) => {
+    const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query
+    
+    if (userId && !mongoose.isValidObjectId(userId))
+        throw new ApiError(400, "Invalid User Id!!")
 
+    let filter = {}
+
+    if (query && userId){
+        filter = {
+          $and: [
+                { owner: userId },
+                { $or: [
+                    { title: { $regex: query, $options: "i" }},
+                    { description: { $regex: query, $options: "i" }}
+                  ]
+                }
+          ]
+        }
+    } else if (query){
+        filter = {
+            $or: [
+                { title: { $regex: query, $options: "i" }},
+                { description: { $regex: query, $options: "i" }},
+            ]  
+        }  
+    } else if (userId){
+        filter = {owner: userId}
+    } else {
+        filter = {}  //fetch all if nothing is provided
+    }
+
+    const isAllowedSortByFields = [ "createdAt", "views", "duration"]
+    if (!isAllowedSortByFields.includes(sortBy))
+        throw new ApiError(400, "Invalid sort field!!")
+
+    const sortOptions = { [sortBy]: sortType === "asc" ? 1 : -1}
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum-1)* limitNum;
+
+    const totalVideoCnt = await Video.countDocuments(filter)
+    const totalPageCnt = Math.ceil(totalVideoCnt/limitNum) 
+    
+    const videos = await Video.find(filter)
+                        .sort(sortOptions)
+                        .skip(skip)
+                        .limit(limitNum)
+                        .populate("owner", "username avatar")
+                        .lean()
+    
+    return res
+    .status(200)
+    .json( new ApiResponse (200, 
+        { videos, totalPageCnt, totalVideoCnt},
+        "All videos fetched successfully!!"   
+    ))
+    
+})
 
 const publishVideo = asyncHandler( async(req, res) => {
 
@@ -185,4 +244,5 @@ export {
     updateVideo,
     deleteVideo,
     togglePublishStatus,
+    getAllVideos
 }
