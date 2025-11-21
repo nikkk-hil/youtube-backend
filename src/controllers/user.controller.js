@@ -419,7 +419,7 @@ const getUserChannelProfile = asyncHandler ( async (req, res) => {
                 },
                 isSubscribed: {
                     $cond: {
-                        if: {$in: [req.user?._id /* this is the user visiting a particular channel */, "$subscribers.subscriber" /* this is the channel visitor is visiting */]},
+                        if: {$in: [req.user._id /* this is the user visiting a particular channel */, "$subscribers.subscriber" /* this is the channel visitor is visiting */]},
                         /* Here the visitor id is being searched in the channel if it's present -> true else -> false */
                         then: true,
                         else: false

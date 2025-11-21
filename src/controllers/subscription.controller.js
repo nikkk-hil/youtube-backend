@@ -30,7 +30,6 @@ const toggleSubscription = asyncHandler(async (req,res) => {
         await Subscription.findByIdAndDelete(existingSubscription._id)
         message = "Unscribed"
     } else {
-
         const newSubscription = await Subscription.create({
             subscriber: subscriberId,
             channel: channelId
@@ -61,11 +60,11 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     const channels = await Subscription.find({subscriber: subscriberId})
                                        .populate("channel", "username avatar")
                                        .lean()
-    console.log(channels);
+    // console.log(channels.length);
 
     return res
     .status(200)
-    .json( new ApiResponse(200, {}, "Channels Fetched Successfully."))
+    .json( new ApiResponse(200, {channels, "Subscribed Channels" : channels.length}, "Channels Fetched Successfully."))
     
 })
 
@@ -91,7 +90,7 @@ const getChannelSubscribers = asyncHandler(async (req,res) => {
 
     return res
     .status(200)
-    .json( new ApiResponse(200, {}, "Subscribers Fetched Successfully."))
+    .json( new ApiResponse(200, subscribers, "Subscribers Fetched Successfully."))
 })
 
 export {
