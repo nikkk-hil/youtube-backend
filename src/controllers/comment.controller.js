@@ -8,7 +8,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 const getVideoComments = asyncHandler( async(req, res) => {
 
     const {videoId} = req.params
-    const {page = 1, limit = 10, sortBy = "createdAt", sortType} = req.query
+    const {page = 1, limit = 10} = req.query
 
     if (!videoId)
         throw new ApiError(400, "Video id is required!")
@@ -20,14 +20,57 @@ const getVideoComments = asyncHandler( async(req, res) => {
     const limitNum = parseInt(limit)
     const skip = (pageNum-1)*limitNum
 
-    const sortOptions = { [sortBy]: sortType === "asc" ? 1 : -1 }
+    // const sortOptions = { [sortBy]: sortType === "asc" ? 1 : -1 }
 
-    const comments = await Comment.find({video: videoId})
-                     .sort(sortOptions)
-                     .skip(skip)
-                     .limit(limitNum)
-                     .populate("owner", "username avatar")
-                     .lean()
+    const comments = await Comment.aggregate([
+        {
+            $match: {
+                video: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
+                from: "Likes",
+                localField: "_id",
+                foreignField: "comment",
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                likesCount: {
+                    $size: "$likes"
+                }
+            }
+        },
+        {
+            $sort: {
+                likesCount: -1,
+                createdAt: -1
+            }
+        },
+        {
+            $skip: skip
+        },
+        {
+            $limit: limitNum
+        },
+        {
+            $project: {
+                content: 1,
+                video: 1,
+                owner: 1,
+                likesCount: 1
+            }
+        }
+    ])
+
+    // const comments = await Comment.find({video: videoId})
+    //                  .sort(sortOptions)
+    //                  .skip(skip)
+    //                  .limit(limitNum)
+    //                  .populate("owner", "username avatar")
+    //                  .lean()
     
     if (!comments)
         throw new ApiError(500, "Something went wrong while extracting comments.")
@@ -89,7 +132,7 @@ const updateComment = asyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .json(200, {}, "Comment updated successfully!")
+    .json(200, comment, "Comment updated successfully!")
 })
 
 const deleteComment = asyncHandler( async(req, res) => {
