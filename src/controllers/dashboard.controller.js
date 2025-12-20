@@ -65,6 +65,7 @@ const getChannelStats = asyncHandler( async(req, res) => {
         },
         {
             $project: {
+                subscribers: 0,
                 watchHistory: 0,
                 password: 0,
                 refreshToken: 0
