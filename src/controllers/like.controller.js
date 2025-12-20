@@ -106,7 +106,7 @@ const getAllLikedVideos = asyncHandler( async(req, res) => {
     //                         video: { $ne: null, $exists: true}
     //                     })
 
-    const videos = await Video.aggregate([
+    const videos = await Like.aggregate([
         {
             $match: {
                 likedBy: new mongoose.Types.ObjectId(req.user?._id)
@@ -115,8 +115,8 @@ const getAllLikedVideos = asyncHandler( async(req, res) => {
         {
             $lookup: {
                 from: "videos",
-                localField: "_id",
-                foreignField: "video",
+                localField: "video",
+                foreignField: "_id",
                 as: "likedVideos",
                 pipeline:[
                     {
