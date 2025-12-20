@@ -58,7 +58,7 @@ const getPlaylistById = asyncHandler( async(req, res) => {
     const playlist = await Playlist.findById(playlistId).lean();
 
     if (!playlist)
-        throw new ApiError(500, "Something went wrong while finding the playlist.")\
+        throw new ApiError(500, "Something went wrong while finding the playlist.")
 
     return res
     .status(200)

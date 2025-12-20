@@ -8,7 +8,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 const getVideoComments = asyncHandler( async(req, res) => {
 
     const {videoId} = req.params
-    const {page = 1, limit = 10} = req.query
+    const {page = 1, limit = 10, sortBy = "createdAt", sortType} = req.query
 
     if (!videoId)
         throw new ApiError(400, "Video id is required!")
@@ -16,7 +16,16 @@ const getVideoComments = asyncHandler( async(req, res) => {
     if (!mongoose.isValidObjectId(videoId))
         throw new ApiError(400, "Video id is invalid")
 
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+    const skip = (pageNum-1)*limitNum
+
+    const sortOptions = { [sortBy]: sortType === "asc" ? 1 : -1 }
+
     const comments = await Comment.find({video: videoId})
+                     .sort(sortOptions)
+                     .skip(skip)
+                     .limit(limitNum)
                      .populate("owner", "username avatar")
                      .lean()
     
