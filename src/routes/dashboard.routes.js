@@ -6,6 +6,6 @@ const router = Router()
 
 router.use(verifyJWT)
 router.route("/get-channel-stats").get(getChannelStats)
-router.route("get-channel-videos").get(getChannelVideos)
+router.route("/get-channel-videos").get(getChannelVideos)
 
 export { router }

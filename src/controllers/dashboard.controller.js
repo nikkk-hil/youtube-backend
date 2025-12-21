@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
 import { Video } from "../models/video.model.js"
 import { ApiError } from "../utils/ApiErrors.js";
@@ -10,6 +11,11 @@ const getChannelStats = asyncHandler( async(req, res) => {
 
     const channelStats = await User.aggregate([
         {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
             $lookup: {
                 from: "videos",
                 localField: "_id",
@@ -17,29 +23,27 @@ const getChannelStats = asyncHandler( async(req, res) => {
                 as: "channelVideos",
                 pipeline:[
                     {
-                        from: "likes",
-                        localField: "_id",
-                        foreignField: "video",
-                        as: "likes"
+                        $lookup:{
+                            from: "likes",
+                            localField: "_id",
+                            foreignField: "video",
+                            as: "likes"
+                        }
                     },
                     {
                         $addFields: {
                             likeCount: {
                                 $size: "$likes"
-                            },
-                            viewCount: {
-                                $sum: "$views"
-                            },
-                            totalDuration: {
-                                $sum: "$duration"
                             }
                         }
                     },
                     {
                         $project: {
-                            likeCount: 1,
-                            viewCount: 1,
-                            totalDuration: 1
+                            owner: 0,
+                            createdAt: 0,
+                            updatedAt: 0,
+                            __v: 0,
+                            likes: 0
                         }
                     }
                 ]
@@ -50,16 +54,25 @@ const getChannelStats = asyncHandler( async(req, res) => {
                 from: "subscriptions",
                 localField: "_id",
                 foreignField: "channel",
-                as: "subcribers",
+                as: "subscribers",
             }
         },
         {
             $addFields: {
                 subscriberCount: {
-                    $size: "subscribers"
+                    $size: "$subscribers"
                 },
                 totalVideo: {
-                    $size: "channelVideos"
+                    $size: "$channelVideos"
+                },
+                viewCount: {
+                    $sum: "$channelVideos.views"
+                },
+                totalDuration: {
+                    $sum: "$channelVideos.duration"
+                },
+                totalLikes: {
+                    $sum: "$channelVideos.likeCount"
                 }
             }
         },
