@@ -143,7 +143,7 @@ const updateVideo = asyncHandler( async (req, res) => {
     if (!title || !description)
         throw new ApiError(400, "Both the fields are required!!")
 
-    const { thumbnailPath } = req.file?.path
+    const thumbnailPath = req.file?.path
     if (!thumbnailPath)
         throw new ApiError(400, "Thumbnail File is required!!")
 
@@ -153,17 +153,18 @@ const updateVideo = asyncHandler( async (req, res) => {
     if (!mongoose.isValidObjectId(videoId))
         throw new ApiError(400, "Video Id is invalid!!")
 
+    const video = await Video.findById(videoId)
+    if (!video)
+        throw new ApiError(404, "Video File is not Found!!")
+
+    if (video.owner.toString() !== req.user._id.toString())
+        throw new ApiError(403, "You are not authozied to update video!!")
+
     const thumbnail = await uploadOnCloudinary(thumbnailPath);
 
     if (!thumbnail?.url)
         throw new ApiError(500, "Uploading of thumbnail on cloudinary failed!!")
 
-    const video = await Video.findById(videoId)
-    if (!video)
-        throw new ApiError(404, "Video File is not Found!!")
-
-    if (video.owner.toString() !== req.user_id.toString())
-        throw new ApiError(403, "You are not authozied to update video!!")
 
     const oldThumbnail = video.thumbnail
 
@@ -173,7 +174,7 @@ const updateVideo = asyncHandler( async (req, res) => {
     await video.save({validateBeforeSave: false})
 
     const deletionResponse = await destroyFromCloudinary(oldThumbnail)
-    console.log("Response: ", deletionResponse);
+    console.log("Deletion Response: ", deletionResponse);
 
     return res
     .status(200)
@@ -195,7 +196,7 @@ const deleteVideo = asyncHandler( async (req, res) => {
     if (!video)
         throw new ApiError(500, "Something went wrong while extracting video document from database")
 
-    if (video.owner.toString() !== req.user_id.toString())
+    if (video.owner.toString() !== req.user._id.toString())
         throw new ApiError(403, "You are not authozied to delete video!!")
     
     const videoUrl = video.videoFile
