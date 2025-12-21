@@ -34,7 +34,7 @@ app.use("/api/v1/tweet", tweetRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
-app.use("/api/v1/healthChack", healthCheckRouter);
+app.use("/api/v1/healthCheck", healthCheckRouter);
 app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/playlist", playlistRouter);
 
