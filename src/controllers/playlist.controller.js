@@ -143,7 +143,7 @@ const deletePlaylist = asyncHandler( async(req, res) => {
 
     const playlist = await Playlist.findById(playlistId)
 
-    if (playlist.owner.toString() !== req.user?._id)
+    if (playlist.owner.toString() !== req.user?._id?.toString())
         throw new ApiError(401, "User is not authenticate to delete playlist.")
 
     await Playlist.findByIdAndDelete(playlistId)
@@ -169,7 +169,7 @@ const updatePlaylist = asyncHandler( async(req, res) => {
 
     const playlist = await Playlist.findById(playlistId)
 
-    if (playlist.owner.toString() !== req.user?._id)
+    if (playlist.owner.toString() !== req.user?._id?.toString())
         throw new ApiError(401, "User is not authenticate to update playlist.")
 
     playlist.name = tittle

@@ -30,7 +30,7 @@ const getVideoComments = asyncHandler( async(req, res) => {
         },
         {
             $lookup: {
-                from: "Likes",
+                from: "likes",
                 localField: "_id",
                 foreignField: "comment",
                 as: "likes"
@@ -60,7 +60,7 @@ const getVideoComments = asyncHandler( async(req, res) => {
                 content: 1,
                 video: 1,
                 owner: 1,
-                likesCount: 1
+                likesCount: 1,
             }
         }
     ])
