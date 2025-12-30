@@ -6,7 +6,7 @@ import { Video } from "../models/video.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const getAllVideos = asyncHandler ( async(req, res) => {
-    const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query
+    const { page = 1, limit = 30, query, sortBy = "createdAt", sortType = "desc", userId } = req.query
     
     if (userId && !mongoose.isValidObjectId(userId))
         throw new ApiError(400, "Invalid User Id!!")
@@ -55,7 +55,6 @@ const getAllVideos = asyncHandler ( async(req, res) => {
                         .skip(skip)
                         .limit(limitNum)
                         .populate("owner", "username avatar")
-                        .lean()
     
     return res
     .status(200)
