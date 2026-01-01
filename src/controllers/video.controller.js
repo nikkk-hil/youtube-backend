@@ -238,11 +238,30 @@ const togglePublishStatus = asyncHandler( async( req, res ) => {
     .json( new ApiResponse(200, {isPublished: video.isPublished}, "Publish Status TOggled Successfully!!"))
 })
 
+const incrementView = asyncHandler( async(req, res) => {
+    const { videoId } = req.params
+
+    if (!videoId)
+        throw new ApiError(400, "VideoId is mising in the url")
+    if (!mongoose.isValidObjectId(videoId))
+        throw new ApiError(400, "Invalid video id.")
+
+    await Video.findByIdAndUpdate(
+        videoId,
+        { $inc : {views: 1}}
+    )
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "views increased successfully."))
+})
+
 export {
     publishVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
     togglePublishStatus,
-    getAllVideos
+    getAllVideos,
+    incrementView
 }
