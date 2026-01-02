@@ -83,6 +83,8 @@ const getChannelSubscribers = asyncHandler(async (req,res) => {
                                           .populate("subscriber", "username avatar")
                                           .lean()
 
+    const subscribersCount = subscribers.length
+
     if (!subscribers)
         throw new ApiError(500, "Subscribers not found!")
 
@@ -90,7 +92,7 @@ const getChannelSubscribers = asyncHandler(async (req,res) => {
 
     return res
     .status(200)
-    .json( new ApiResponse(200, subscribers, "Subscribers Fetched Successfully."))
+    .json( new ApiResponse(200, {subscribers, subscribersCount}, "Subscribers Fetched Successfully."))
 })
 
 export {
