@@ -6,7 +6,7 @@ const router = Router()
 
 router.use(verifyJWT)
 
-router.route("/toggle-subscription/:channelId").get(toggleSubscription)
+router.route("/toggle-subscription/:channelId").post(toggleSubscription)
 router.route("/get-subscribed-channels/:subscriberId").get(getSubscribedChannels)
 router.route("/get-channel-subscribers/:channelId").get(getChannelSubscribers)
 
