@@ -5,6 +5,7 @@ import { Comment } from "../models/comment.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 
+
 const getVideoComments = asyncHandler( async(req, res) => {
 
     const {videoId} = req.params
@@ -37,6 +38,22 @@ const getVideoComments = asyncHandler( async(req, res) => {
             }
         },
         {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline:[
+                    {
+                        $project: {
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
             $addFields: {
                 likesCount: {
                     $size: "$likes"
@@ -58,7 +75,6 @@ const getVideoComments = asyncHandler( async(req, res) => {
         {
             $project: {
                 content: 1,
-                video: 1,
                 owner: 1,
                 likesCount: 1,
             }
@@ -85,7 +101,9 @@ const addComment = asyncHandler( async(req, res) => {
     const {videoId} = req.params
     const {content} = req.body
 
-    if (!content || !content.trim() === "")
+    console.log(content)
+
+    if (!content || content.trim() === "")
         throw new ApiError(400, "Content is required!")
     if (!videoId)
         throw new ApiError(400, "Video Id is required!")
