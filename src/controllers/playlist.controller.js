@@ -7,14 +7,14 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createPlaylist = asyncHandler( async(req, res) => {
 
-    const {tittle, description} = req.body
-    if (!tittle)
-        throw new ApiError(400, "tittle is required.")
+    const {title, description} = req.body
+    if (!title)
+        throw new ApiError(400, "title is required.")
     if (!description)
         throw new ApiError(400, "description is required.")
 
     const playlist = await Playlist.create({
-        name: tittle,
+        name: title,
         description,
         owner: req.user?._id
     })
@@ -36,7 +36,7 @@ const getUserPlaylists = asyncHandler( async(req, res) => {
     if (!mongoose.isValidObjectId(userId))
         throw new ApiError(400, "Invalid user id.")
 
-    const userPlaylists = await Playlist.find({owner: userId})
+    const userPlaylists = await Playlist.find({owner: userId}).select("-videos")
     if (!userPlaylists || userPlaylists.length === 0)
         throw new ApiError(500, "Something went wrong while finding user playlists.")
 
