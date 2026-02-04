@@ -87,11 +87,30 @@ const getPlaylistById = asyncHandler(async (req, res) => {
               createdAt: 1,
               thumbnail: 1,
               owner: 1,
+              description: 1,
+              duration: 1
             },
           },
         ],
       },
     },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+               username: 1,
+                    avatar: 1,
+            }
+          }
+        ]
+      }
+    },
+    { $unwind: "$owner"}
   ]);
 
   // console.log(playlist)
