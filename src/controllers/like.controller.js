@@ -104,8 +104,8 @@ const getAllLikedVideos = asyncHandler( async(req, res) => {
     const videos = await Like.find({ 
                             likedBy: req.user?._id,
                             video: { $ne: null, $exists: true}
-                        })
-                              .populate("likedBy", "username avatar")
+                        }, {video: 1})
+                              .populate("video", "title description thumbnail")
                               .lean()
 
     // const videos = await Like.aggregate([
