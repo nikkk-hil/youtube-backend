@@ -50,11 +50,14 @@ const getPublicId = function(url){
     return publicId
 }
 
-const destroyFromCloudinary = async(url) => {
+const destroyFromCloudinary = async(url, res_type) => {
     try {
         const public_id = getPublicId(url)
         // console.log("Public ID: ", public_id);
-        const response = await cloudinary.uploader.destroy(public_id);
+        const response = await cloudinary.uploader.destroy(public_id, {
+            resource_type: res_type
+        });
+        // console.log(response)
         return response;
     } catch (error) {
         console.error("Deletion from cloudinary failed!!", error);

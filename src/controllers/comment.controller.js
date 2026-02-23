@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiErrors.js";
 import { Comment} from "../models/comment.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Like } from "../models/like.model.js";
 
 
 
@@ -168,6 +169,9 @@ const deleteComment = asyncHandler( async(req, res) => {
     if (req.user?._id.toString() !== comment.owner.toString())
         throw new ApiError(401, "Not authorized to delete comment!")
 
+    await Like.deleteMany({
+        comment: commentId
+    })
     await Comment.findByIdAndDelete(commentId)
 
     return res

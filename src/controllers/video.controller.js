@@ -9,6 +9,8 @@ import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subscription } from "../models/subscription.model.js";
 import { Like } from "../models/like.model.js";
+import { Playlist } from "../models/playlist.model.js";
+import { Comment } from "../models/comment.model.js"
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
@@ -230,8 +232,15 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const videoUrl = video.videoFile;
   const thumbnailUrl = video.thumbnail;
 
-  await destroyFromCloudinary(videoUrl);
-  await destroyFromCloudinary(thumbnailUrl);
+  await destroyFromCloudinary(videoUrl, "video");
+  await destroyFromCloudinary(thumbnailUrl, "image");
+
+  await Like.deleteMany({video: videoId});
+  await Comment.deleteMany({video: videoId});
+  await Playlist.updateMany(
+    {video: videoId},
+    {$pull : {video: videoId}}
+  );
   await Video.findByIdAndDelete(videoId);
 
   return res
