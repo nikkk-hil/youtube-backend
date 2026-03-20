@@ -79,8 +79,8 @@ const userRegistration = asyncHandler( async (req, res) => {
             username: username.toLowerCase(),
             email,
             password,
-            avatar: avatar.url,
-            coverImage: coverImage?.url || ""
+            avatar: avatar.secure_url,
+            coverImage: coverImage?.secure_url || ""
         });
 
         const createdUser = await User.findById(user._id).select(
@@ -305,13 +305,13 @@ const changeAvatar = asyncHandler ( async (req,res) => {
 
     console.log(avatar);
 
-    if (!avatar.url)
+    if (!avatar.secure_url)
         throw new ApiError(400, "Upload on Cloudinary Failed!!");
 
     const user = await User.findById(req.user?._id).select("-password")
     const oldAvatarUrl = user.avatar;
 
-    user.avatar = avatar.url;
+    user.avatar = avatar.secure_url;
     user.save({validateBeforeSave: false});
     
     const response = await destroyFromCloudinary(oldAvatarUrl);
@@ -341,13 +341,13 @@ const changeCoverImage = asyncHandler ( async (req, res) => {
 
     const coverImage = await uploadOnCloudinary(coverImgPath);
 
-    if (!coverImage.url)
+    if (!coverImage.secure_url)
         throw new ApiError(501, "Upload on Cloudinary Failed!!");
 
     const user = await User.findById(req.user?._id).select("-password")
 
     const oldCoverImgUrl = user.coverImage
-    user.coverImage = coverImage.url
+    user.coverImage = coverImage.secure_url
     user.save({validateBeforeSave: false})
 
     const deletionResponse = await destroyFromCloudinary(oldCoverImgUrl);

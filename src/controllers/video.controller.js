@@ -109,8 +109,8 @@ const publishVideo = asyncHandler(async (req, res) => {
   console.log("Thumbnail: ", thumbnail);
 
   const video = await Video.create({
-    videoFile: videoFile.url,
-    thumbnail: thumbnail.url,
+    videoFile: videoFile.secure_url,
+    thumbnail: thumbnail.secure_url,
     title,
     description,
     duration: videoFile.duration,
@@ -191,12 +191,12 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   const thumbnail = await uploadOnCloudinary(thumbnailPath);
 
-  if (!thumbnail?.url)
+  if (!thumbnail?.secure_url)
     throw new ApiError(500, "Uploading of thumbnail on cloudinary failed!!");
 
   const oldThumbnail = video.thumbnail;
 
-  video.thumbnail = thumbnail.url;
+  video.thumbnail = thumbnail.secure_url;
   video.title = title;
   video.description = description;
   await video.save({ validateBeforeSave: false });
