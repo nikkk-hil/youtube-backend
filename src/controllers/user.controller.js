@@ -214,7 +214,8 @@ const refreshAccessToken = asyncHandler ( async (req, res) => {
 
     const option = {
             httpOnly: true,
-            secure: true
+            secure: true,
+            sameSite: "None"
         }
 
     return res
