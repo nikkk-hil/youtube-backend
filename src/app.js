@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { notFoundHandler, errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -37,6 +38,10 @@ app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/healthCheck", healthCheckRouter);
 app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/playlist", playlistRouter);
+
+
+// app.use(notFoundHandler);
+// app.use(errorHandler);
 
 
 export default app;
